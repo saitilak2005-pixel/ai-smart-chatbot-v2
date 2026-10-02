@@ -1,0 +1,6 @@
+{
+  "name": "AI-Powered Smart Chatbot",
+  "description": "A multi-turn conversational AI chatbot using LLM APIs, prompt engineering, and session state management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
