@@ -33,7 +33,16 @@ import {
   History,
   Clock,
   Plus,
+  Sun,
+  Moon,
+  Palette,
+  Monitor,
+  Brain,
+  FileSearch,
+  Lightbulb,
 } from 'lucide-react';
+import ResumeAnalyzer from './components/ResumeAnalyzer';
+import ProjectGenerator from './components/ProjectGenerator';
 
 interface ChatMessage {
   id: string;
@@ -70,9 +79,237 @@ function formatRelativeTime(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' });
 }
 
+export type ThemeModeSetting = 'sync' | 'single';
+
+export interface ThemeColors {
+  id: string;
+  name: string;
+  isDark: boolean;
+  appBg: string;
+  sidebarBg: string;
+  headerBg: string;
+  border: string;
+  cardBg: string;
+  subtleBg: string;
+  text: string;
+  headingText: string;
+  subtext: string;
+  inputBg: string;
+  inputBorder: string;
+  userBubble: string;
+  botBubble: string;
+  accentBtn: string;
+  secondaryBtn: string;
+  badge: string;
+  modalBg: string;
+}
+
+const GITHUB_THEMES: Record<string, ThemeColors> = {
+  'dark-default': {
+    id: 'dark-default',
+    name: 'Dark default',
+    isDark: true,
+    appBg: 'bg-[#0d1117]',
+    sidebarBg: 'bg-[#161b22]',
+    headerBg: 'bg-[#161b22]/90',
+    border: 'border-[#30363d]',
+    cardBg: 'bg-[#161b22]',
+    subtleBg: 'bg-[#161b22]/70',
+    text: 'text-[#f0f6fc]',
+    headingText: 'text-white',
+    subtext: 'text-[#8b949e]',
+    inputBg: 'bg-[#0d1117]',
+    inputBorder: 'border-[#30363d]',
+    userBubble: 'bg-[#1f6feb] text-white shadow-sm',
+    botBubble: 'bg-[#161b22] border border-[#30363d] text-[#f0f6fc]',
+    accentBtn: 'bg-[#238636] hover:bg-[#2ea043] text-white',
+    secondaryBtn: 'bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d]',
+    badge: 'bg-[#388bfd]/15 text-[#58a6ff] border-[#388bfd]/30',
+    modalBg: 'bg-[#161b22]',
+  },
+  'dark-dimmed': {
+    id: 'dark-dimmed',
+    name: 'Dark dimmed',
+    isDark: true,
+    appBg: 'bg-[#22272e]',
+    sidebarBg: 'bg-[#2d333b]',
+    headerBg: 'bg-[#2d333b]/90',
+    border: 'border-[#444c56]',
+    cardBg: 'bg-[#2d333b]',
+    subtleBg: 'bg-[#2d333b]/70',
+    text: 'text-[#adbac7]',
+    headingText: 'text-white',
+    subtext: 'text-[#768390]',
+    inputBg: 'bg-[#22272e]',
+    inputBorder: 'border-[#444c56]',
+    userBubble: 'bg-[#316dca] text-white shadow-sm',
+    botBubble: 'bg-[#2d333b] border border-[#444c56] text-[#adbac7]',
+    accentBtn: 'bg-[#347d39] hover:bg-[#46954a] text-white',
+    secondaryBtn: 'bg-[#373e47] hover:bg-[#444c56] text-[#adbac7] border border-[#444c56]',
+    badge: 'bg-[#316dca]/20 text-[#539bf5] border-[#316dca]/30',
+    modalBg: 'bg-[#2d333b]',
+  },
+  'dark-high-contrast': {
+    id: 'dark-high-contrast',
+    name: 'Dark high contrast',
+    isDark: true,
+    appBg: 'bg-[#010409]',
+    sidebarBg: 'bg-[#0a0c10]',
+    headerBg: 'bg-[#0a0c10]',
+    border: 'border-[#7a828e]',
+    cardBg: 'bg-[#0a0c10]',
+    subtleBg: 'bg-[#0a0c10]',
+    text: 'text-[#ffffff]',
+    headingText: 'text-white',
+    subtext: 'text-[#f0f6fc]',
+    inputBg: 'bg-[#010409]',
+    inputBorder: 'border-2 border-[#7a828e]',
+    userBubble: 'bg-[#1f6feb] text-white border-2 border-white shadow-sm',
+    botBubble: 'bg-[#0a0c10] border-2 border-[#7a828e] text-white',
+    accentBtn: 'bg-[#238636] text-white border border-white',
+    secondaryBtn: 'bg-[#151b23] text-white border border-[#7a828e]',
+    badge: 'bg-white/20 text-white border border-white',
+    modalBg: 'bg-[#0a0c10]',
+  },
+  'dark-colorblind': {
+    id: 'dark-colorblind',
+    name: 'Dark Protanopia & Deuteranopia',
+    isDark: true,
+    appBg: 'bg-[#0d1117]',
+    sidebarBg: 'bg-[#161b22]',
+    headerBg: 'bg-[#161b22]/90',
+    border: 'border-[#30363d]',
+    cardBg: 'bg-[#161b22]',
+    subtleBg: 'bg-[#161b22]/70',
+    text: 'text-[#f0f6fc]',
+    headingText: 'text-white',
+    subtext: 'text-[#8b949e]',
+    inputBg: 'bg-[#0d1117]',
+    inputBorder: 'border-[#30363d]',
+    userBubble: 'bg-[#1f6feb] text-white shadow-sm',
+    botBubble: 'bg-[#161b22] border border-[#30363d] text-[#f0f6fc]',
+    accentBtn: 'bg-[#b08800] hover:bg-[#c69900] text-black font-semibold',
+    secondaryBtn: 'bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d]',
+    badge: 'bg-[#b08800]/20 text-[#d29922] border-[#b08800]/40',
+    modalBg: 'bg-[#161b22]',
+  },
+  'dark-tritanopia': {
+    id: 'dark-tritanopia',
+    name: 'Dark Tritanopia',
+    isDark: true,
+    appBg: 'bg-[#0d1117]',
+    sidebarBg: 'bg-[#161b22]',
+    headerBg: 'bg-[#161b22]/90',
+    border: 'border-[#30363d]',
+    cardBg: 'bg-[#161b22]',
+    subtleBg: 'bg-[#161b22]/70',
+    text: 'text-[#f0f6fc]',
+    headingText: 'text-white',
+    subtext: 'text-[#8b949e]',
+    inputBg: 'bg-[#0d1117]',
+    inputBorder: 'border-[#30363d]',
+    userBubble: 'bg-[#1f6feb] text-white shadow-sm',
+    botBubble: 'bg-[#161b22] border border-[#30363d] text-[#f0f6fc]',
+    accentBtn: 'bg-[#e5534b] hover:bg-[#fa7970] text-white',
+    secondaryBtn: 'bg-[#21262d] hover:bg-[#30363d] text-[#c9d1d9] border border-[#30363d]',
+    badge: 'bg-[#e5534b]/20 text-[#fa7970] border-[#e5534b]/40',
+    modalBg: 'bg-[#161b22]',
+  },
+  'light-default': {
+    id: 'light-default',
+    name: 'Day theme (Modern Light)',
+    isDark: false,
+    appBg: 'bg-[#f8fafc]',
+    sidebarBg: 'bg-[#f8fafc]/90',
+    headerBg: 'bg-white/75',
+    border: 'border-slate-200/80',
+    cardBg: 'bg-white/90',
+    subtleBg: 'bg-white/75',
+    text: 'text-slate-800',
+    headingText: 'text-slate-900',
+    subtext: 'text-slate-500',
+    inputBg: 'bg-white/90',
+    inputBorder: 'border-slate-200/90',
+    userBubble: 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/15',
+    botBubble: 'bg-white/90 border border-slate-200/80 text-slate-800 shadow-xs',
+    accentBtn: 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/25',
+    secondaryBtn: 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs hover:shadow-xs hover:border-slate-300',
+    badge: 'bg-indigo-50/90 text-indigo-700 border-indigo-200/70',
+    modalBg: 'bg-white',
+  },
+  'light-high-contrast': {
+    id: 'light-high-contrast',
+    name: 'Light high contrast',
+    isDark: false,
+    appBg: 'bg-[#ffffff]',
+    sidebarBg: 'bg-[#ffffff]',
+    headerBg: 'bg-[#ffffff]',
+    border: 'border-[#1f2328]',
+    cardBg: 'bg-[#ffffff]',
+    subtleBg: 'bg-[#ffffff]',
+    text: 'text-[#000000]',
+    headingText: 'text-[#000000]',
+    subtext: 'text-[#24292f]',
+    inputBg: 'bg-[#ffffff]',
+    inputBorder: 'border-2 border-[#1f2328]',
+    userBubble: 'bg-[#0550ae] text-white border-2 border-black shadow-sm',
+    botBubble: 'bg-[#ffffff] border-2 border-[#1f2328] text-black',
+    accentBtn: 'bg-[#1a7f37] text-white border border-black',
+    secondaryBtn: 'bg-[#ffffff] text-black border-2 border-black hover:bg-slate-100',
+    badge: 'bg-black/10 text-black border border-black',
+    modalBg: 'bg-[#ffffff]',
+  },
+  'light-colorblind': {
+    id: 'light-colorblind',
+    name: 'Light Protanopia & Deuteranopia',
+    isDark: false,
+    appBg: 'bg-[#ffffff]',
+    sidebarBg: 'bg-[#f6f8fa]',
+    headerBg: 'bg-[#ffffff]',
+    border: 'border-[#d0d7de]',
+    cardBg: 'bg-[#ffffff]',
+    subtleBg: 'bg-[#f6f8fa]',
+    text: 'text-[#1f2328]',
+    headingText: 'text-[#1f2328]',
+    subtext: 'text-[#656d76]',
+    inputBg: 'bg-[#ffffff]',
+    inputBorder: 'border-[#d0d7de]',
+    userBubble: 'bg-[#0969da] text-white shadow-sm',
+    botBubble: 'bg-[#f6f8fa] border border-[#d0d7de] text-[#1f2328]',
+    accentBtn: 'bg-[#9a6700] hover:bg-[#825600] text-white shadow-sm',
+    secondaryBtn: 'bg-[#ffffff] hover:bg-[#f3f4f6] text-[#24292f] border border-[#d0d7de] shadow-xs',
+    badge: 'bg-[#9a6700]/10 text-[#9a6700] border-[#9a6700]/20',
+    modalBg: 'bg-[#ffffff]',
+  },
+  'light-tritanopia': {
+    id: 'light-tritanopia',
+    name: 'Light Tritanopia',
+    isDark: false,
+    appBg: 'bg-[#ffffff]',
+    sidebarBg: 'bg-[#f6f8fa]',
+    headerBg: 'bg-[#ffffff]',
+    border: 'border-[#d0d7de]',
+    cardBg: 'bg-[#ffffff]',
+    subtleBg: 'bg-[#f6f8fa]',
+    text: 'text-[#1f2328]',
+    headingText: 'text-[#1f2328]',
+    subtext: 'text-[#656d76]',
+    inputBg: 'bg-[#ffffff]',
+    inputBorder: 'border-[#d0d7de]',
+    userBubble: 'bg-[#0969da] text-white shadow-sm',
+    botBubble: 'bg-[#f6f8fa] border border-[#d0d7de] text-[#1f2328]',
+    accentBtn: 'bg-[#cf222e] hover:bg-[#a40e26] text-white shadow-sm',
+    secondaryBtn: 'bg-[#ffffff] hover:bg-[#f3f4f6] text-[#24292f] border border-[#d0d7de] shadow-xs',
+    badge: 'bg-[#cf222e]/10 text-[#cf222e] border-[#cf222e]/20',
+    modalBg: 'bg-[#ffffff]',
+  },
+};
+
 const PERSONAS: Record<string, string> = {
   'General Assistant':
     'You are an intelligent, articulate, and context-aware AI Assistant. Always resolve multi-turn references accurately.',
+  'Resume & Career Coach':
+    'You are an expert technical recruiter, engineering leader, and career coach. Review resumes, detect skill gaps, guide interview prep, and optimize bullet points using the Google XYZ formula.',
   'Python & ML Tutor':
     'You are an expert Python and Machine Learning tutor. Explain concepts clearly with code snippets and practical intuition.',
   'Concise & Direct':
@@ -85,12 +322,12 @@ const PROMPT_POOL = [
   'What is machine learning?',
   'What are its types?',
   'Explain the second type with an example.',
-  'How do neural networks learn from weights and biases?',
+  'How do I bridge my skill gap between frontend and cloud DevOps?',
   'Write a Python function for binary search with comments.',
-  'What is the difference between supervised and unsupervised learning?',
+  'How do I write high-impact resume bullet points using the Google XYZ formula?',
   'Explain gradient descent using a hiker descending foggy mountains analogy.',
   'How does transformer self-attention work in simple words?',
-  'Write a Python script demonstrating memoization with an LRU cache.',
+  'What are the most common technical interview questions for a Senior Backend role?',
   'What is overfitting in machine learning and how do you prevent it?',
   'Explain backpropagation step by step without dense calculus.',
   'What is reinforcement learning and how is it used in robotics?',
@@ -98,10 +335,8 @@ const PROMPT_POOL = [
   'How do Large Language Models predict the next token?',
   'Write a Python generator function to stream large datasets efficiently.',
   'What is transfer learning and why does it save computational power?',
-  'Explain convolution in CNNs using an image filter flashlight analogy.',
   'What is the difference between shallow copy and deep copy in Python?',
   'How does semantic search differ from keyword matching search?',
-  'Explain latent space embeddings using a 3D library analogy.',
   'Write a Python class implementing a Priority Queue with heap.',
   'What is the difference between Precision and Recall in ML metrics?',
 ];
@@ -114,7 +349,7 @@ function getRandomPrompts(count: number = 3, currentList: string[] = []): string
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'chat' | 'multiturn' | 'files' | 'architecture'>('chat');
+  const [activeTab, setActiveTab] = useState<'chat' | 'resume' | 'project' | 'multiturn' | 'files' | 'architecture'>('chat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -155,6 +390,149 @@ export default function App() {
   const [temperature, setTemperature] = useState(0.7);
   const [contextTurns, setContextTurns] = useState(10);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // GitHub Theme Settings State (matching user screenshot)
+  const [themeModeSetting, setThemeModeSetting] = useState<ThemeModeSetting>(() => {
+    try {
+      return (localStorage.getItem('gh_theme_mode') as ThemeModeSetting) || 'sync';
+    } catch {
+      return 'sync';
+    }
+  });
+
+  const [systemPrefersDark, setSystemPrefersDark] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+    media.addEventListener('change', handler);
+    return () => media.removeEventListener('change', handler);
+  }, []);
+
+  const [selectedDarkTheme, setSelectedDarkTheme] = useState<string>(() => {
+    try {
+      return localStorage.getItem('gh_theme_dark') || 'dark-default';
+    } catch {
+      return 'dark-default';
+    }
+  });
+
+  const [selectedLightTheme, setSelectedLightTheme] = useState<string>(() => {
+    try {
+      return localStorage.getItem('gh_theme_light') || 'light-default';
+    } catch {
+      return 'light-default';
+    }
+  });
+
+  const [singleThemeTarget, setSingleThemeTarget] = useState<'dark' | 'light'>('dark');
+
+  const [increaseContrast, setIncreaseContrast] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gh_contrast_increase') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [lightModeContrast, setLightModeContrast] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gh_contrast_light') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [darkModeContrast, setDarkModeContrast] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('gh_contrast_dark') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const [settingsTab, setSettingsTab] = useState<'appearance' | 'model' | 'views' | 'data'>('appearance');
+
+  // Compute active theme
+  const isDarkActive = themeModeSetting === 'sync' ? systemPrefersDark : singleThemeTarget === 'dark';
+
+  let activeThemeKey = 'dark-default';
+  if (isDarkActive) {
+    if (increaseContrast || darkModeContrast) {
+      activeThemeKey = 'dark-high-contrast';
+    } else {
+      activeThemeKey = selectedDarkTheme;
+    }
+  } else {
+    if (increaseContrast || lightModeContrast) {
+      activeThemeKey = 'light-high-contrast';
+    } else {
+      activeThemeKey = selectedLightTheme;
+    }
+  }
+
+  const currentTheme = GITHUB_THEMES[activeThemeKey] || GITHUB_THEMES['dark-default'];
+
+  const handleThemeModeChange = (mode: ThemeModeSetting) => {
+    setThemeModeSetting(mode);
+    try {
+      localStorage.setItem('gh_theme_mode', mode);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDarkThemeSelect = (themeId: string) => {
+    setSelectedDarkTheme(themeId);
+    try {
+      localStorage.setItem('gh_theme_dark', themeId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleLightThemeSelect = (themeId: string) => {
+    setSelectedLightTheme(themeId);
+    try {
+      localStorage.setItem('gh_theme_light', themeId);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSingleThemeTarget = (target: 'dark' | 'light') => {
+    setSingleThemeTarget(target);
+    try {
+      localStorage.setItem('gh_single_target', target);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleActivateTheme = (target: 'dark' | 'light') => {
+    setThemeModeSetting('single');
+    try {
+      localStorage.setItem('gh_theme_mode', 'single');
+    } catch (e) {
+      console.error(e);
+    }
+    handleSingleThemeTarget(target);
+  };
+
+  const handleContrastToggle = (checked: boolean) => {
+    setIncreaseContrast(checked);
+    try {
+      localStorage.setItem('gh_contrast_increase', String(checked));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Multi-turn test runner state
   const [testRunning, setTestRunning] = useState(false);
@@ -478,22 +856,22 @@ export default function App() {
     <div className="flex flex-col h-full justify-between">
       <div className="flex flex-col h-[calc(100%-110px)] space-y-3">
         {/* Brand & Internship Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 shrink-0">
+        <div className={`flex items-center justify-between pb-3 border-b ${currentTheme.border} shrink-0`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-500/20 text-white shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-indigo-500/20 text-white shrink-0">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-sm tracking-tight text-white flex items-center gap-1.5">
-                Smart Chatbot
+              <h2 className={`font-bold text-sm tracking-tight ${currentTheme.headingText} flex items-center gap-1.5`}>
+                NEXORA AI
               </h2>
-              <p className="text-[11px] text-slate-400">LLM API Conversational Engine</p>
+              <p className={`text-[11px] ${currentTheme.subtext}`}>Conversational & Career Engine</p>
             </div>
           </div>
           {isMobile ? (
             <button
               onClick={() => setIsMobileDrawerOpen(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className={`p-1.5 rounded-lg ${currentTheme.subtext} hover:${currentTheme.text} ${isDarkActive ? 'hover:bg-slate-800' : 'hover:bg-slate-200'} transition-colors cursor-pointer`}
               aria-label="Close drawer"
             >
               <X className="w-5 h-5" />
@@ -501,7 +879,7 @@ export default function App() {
           ) : (
             <button
               onClick={() => setIsDesktopSidebarOpen(false)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className={`p-1.5 rounded-lg ${currentTheme.subtext} hover:${currentTheme.text} ${isDarkActive ? 'hover:bg-slate-800' : 'hover:bg-slate-200'} transition-colors cursor-pointer`}
               title="Collapse sidebar (Ctrl+B)"
               aria-label="Collapse sidebar"
             >
@@ -513,7 +891,7 @@ export default function App() {
         {/* Primary Action: New Chat Button */}
         <button
           onClick={handleNewConversation}
-          className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium text-xs flex items-center justify-between shadow-lg shadow-indigo-600/25 transition-all group shrink-0"
+          className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:opacity-95 text-white font-medium text-xs flex items-center justify-between shadow-md shadow-indigo-600/20 transition-all group shrink-0 cursor-pointer"
         >
           <span className="flex items-center gap-2">
             <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
@@ -522,15 +900,67 @@ export default function App() {
           <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">New</span>
         </button>
 
+        {/* Workspace Quick Nav: Chat, Resume AI & Project Generator */}
+        <div className="grid grid-cols-3 gap-1 shrink-0">
+          <button
+            onClick={() => {
+              setActiveTab('chat');
+              if (isMobile) setIsMobileDrawerOpen(false);
+            }}
+            className={`py-1.5 px-1 rounded-xl text-[11px] font-medium transition-all flex items-center justify-center gap-1 cursor-pointer border ${
+              activeTab === 'chat'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs font-semibold'
+                : !isDarkActive
+                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/90 shadow-2xs'
+                : `${currentTheme.secondaryBtn}`
+            }`}
+          >
+            <MessageSquare className="w-3 h-3" />
+            <span>Chat</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('resume');
+              if (isMobile) setIsMobileDrawerOpen(false);
+            }}
+            className={`py-1.5 px-1 rounded-xl text-[11px] font-medium transition-all flex items-center justify-center gap-1 cursor-pointer border ${
+              activeTab === 'resume'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs font-semibold'
+                : !isDarkActive
+                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/90 shadow-2xs'
+                : `${currentTheme.secondaryBtn}`
+            }`}
+          >
+            <Brain className="w-3 h-3 text-indigo-500" />
+            <span>Resume</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('project');
+              if (isMobile) setIsMobileDrawerOpen(false);
+            }}
+            className={`py-1.5 px-1 rounded-xl text-[11px] font-medium transition-all flex items-center justify-center gap-1 cursor-pointer border ${
+              activeTab === 'project'
+                ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs font-semibold'
+                : !isDarkActive
+                ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/90 shadow-2xs'
+                : `${currentTheme.secondaryBtn}`
+            }`}
+          >
+            <Lightbulb className="w-3 h-3 text-amber-500" />
+            <span>Project</span>
+          </button>
+        </div>
+
         {/* Old Chats / Previous Conversations Section */}
         <div className="flex-1 flex flex-col min-h-0 pt-2">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-1 pb-2 shrink-0">
+          <div className={`flex items-center justify-between text-[11px] font-semibold ${currentTheme.subtext} uppercase tracking-wider px-1 pb-2 shrink-0`}>
             <div className="flex items-center gap-1.5">
-              <History className="w-3.5 h-3.5 text-indigo-400" />
+              <History className="w-3.5 h-3.5 text-indigo-500" />
               <span>Previous Chats</span>
             </div>
             {savedSessions.length > 0 && (
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-300">
+              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isDarkActive ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'}`}>
                 {savedSessions.length}
               </span>
             )}
@@ -538,10 +968,12 @@ export default function App() {
 
           <div className="flex-1 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
             {savedSessions.length === 0 ? (
-              <div className="p-4 text-center rounded-xl bg-slate-900/40 border border-slate-800/60 text-slate-400 space-y-1 my-2">
-                <MessageSquare className="w-5 h-5 text-slate-600 mx-auto mb-1 opacity-70" />
-                <p className="text-xs font-medium text-slate-300">No previous chats</p>
-                <p className="text-[11px] text-slate-500 leading-snug">
+              <div className={`p-4 text-center rounded-xl ${
+                !isDarkActive ? 'bg-white/70 border-slate-200/80 shadow-2xs' : `${currentTheme.subtleBg} border ${currentTheme.border}`
+              } border space-y-1 my-2`}>
+                <MessageSquare className={`w-5 h-5 mx-auto mb-1 ${currentTheme.subtext} opacity-70`} />
+                <p className={`text-xs font-semibold ${currentTheme.text}`}>No previous chats</p>
+                <p className={`text-[11px] ${currentTheme.subtext} leading-snug`}>
                   Conversations are saved automatically here as you chat.
                 </p>
               </div>
@@ -554,21 +986,25 @@ export default function App() {
                     onClick={() => handleSelectSession(session)}
                     className={`group relative flex items-center justify-between p-2 rounded-xl cursor-pointer transition-all border ${
                       isActive
-                        ? 'bg-indigo-600/15 border-indigo-500/50 text-indigo-200 shadow-sm'
-                        : 'bg-slate-900/40 hover:bg-slate-900 border-slate-800/60 hover:border-slate-700 text-slate-300'
+                        ? isDarkActive
+                          ? 'bg-indigo-600/15 border-indigo-500/50 text-indigo-200 shadow-sm'
+                          : 'bg-white border-indigo-300 text-indigo-950 font-semibold shadow-xs ring-1 ring-indigo-500/10'
+                        : isDarkActive
+                        ? 'bg-slate-900/40 hover:bg-slate-900 border-slate-800/60 hover:border-slate-700 text-slate-300'
+                        : 'bg-white/80 hover:bg-white border-slate-200/80 hover:border-slate-300 text-slate-700 hover:text-slate-900 shadow-2xs hover:shadow-xs'
                     }`}
                   >
                     <div className="flex items-start gap-2 min-w-0 pr-1 flex-1">
                       <MessageSquare
                         className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${
-                          isActive ? 'text-indigo-400' : 'text-slate-500'
+                          isActive ? 'text-indigo-600 dark:text-indigo-400' : currentTheme.subtext
                         }`}
                       />
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium truncate leading-tight">
+                        <div className={`text-xs font-medium truncate leading-tight ${currentTheme.text}`}>
                           {session.title || 'Conversation'}
                         </div>
-                        <div className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1.5">
+                        <div className={`text-[10px] ${currentTheme.subtext} mt-0.5 flex items-center gap-1.5`}>
                           <span>{formatRelativeTime(session.timestamp)}</span>
                           <span>•</span>
                           <span>{session.messages.length} msgs</span>
@@ -577,7 +1013,7 @@ export default function App() {
                     </div>
                     <button
                       onClick={(e) => handleDeleteSession(session.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 transition-all shrink-0"
+                      className={`opacity-0 group-hover:opacity-100 p-1 rounded-md ${currentTheme.subtext} hover:text-rose-500 hover:bg-rose-500/10 transition-all shrink-0 cursor-pointer`}
                       title="Delete chat"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -591,21 +1027,25 @@ export default function App() {
       </div>
 
       {/* Bottom Area: Settings Button Only */}
-      <div className="pt-3 border-t border-slate-800/80 shrink-0">
+      <div className={`pt-3 border-t ${currentTheme.border} shrink-0`}>
         <button
           onClick={() => setIsSettingsOpen(true)}
-          className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800/90 border border-slate-800 text-slate-200 text-xs font-medium transition-all group shadow-sm"
+          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl ${
+            !isDarkActive
+              ? 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs hover:shadow-xs hover:border-slate-300'
+              : currentTheme.secondaryBtn
+          } text-xs font-medium transition-all group cursor-pointer`}
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center group-hover:rotate-45 transition-transform duration-200">
+            <div className={`w-7 h-7 rounded-lg ${isDarkActive ? 'bg-indigo-600/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'} flex items-center justify-center group-hover:rotate-45 transition-transform duration-200`}>
               <Settings className="w-4 h-4" />
             </div>
             <div className="text-left">
-              <div className="leading-tight font-semibold text-white">Settings</div>
-              <div className="text-[10px] text-slate-400 truncate max-w-[140px]">{selectedPersona}</div>
+              <div className={`leading-tight font-semibold ${currentTheme.headingText}`}>Settings</div>
+              <div className={`text-[10px] ${currentTheme.subtext} truncate max-w-[140px]`}>{selectedPersona}</div>
             </div>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-indigo-300 border border-slate-700/50">
+          <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${isDarkActive ? 'bg-slate-800 text-indigo-300 border border-slate-700/50' : 'bg-indigo-50 text-indigo-700 border border-indigo-200/60 font-medium'}`}>
             Open
           </span>
         </button>
@@ -614,7 +1054,20 @@ export default function App() {
   );
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#090D16] text-slate-100 font-sans selection:bg-indigo-500/30 selection:text-indigo-200">
+    <div className={`flex h-screen w-screen overflow-hidden ${
+      !isDarkActive
+        ? 'bg-gradient-to-br from-[#f8fafc] via-[#f1f5f9]/80 to-[#eef2ff]/50 text-slate-800'
+        : `${currentTheme.appBg} ${currentTheme.text}`
+    } font-sans selection:bg-indigo-500/30 selection:text-indigo-600 transition-colors duration-200 relative`}>
+      {/* Ambient background mesh in light mode */}
+      {!isDarkActive && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          <div className="absolute -top-32 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/25 via-purple-100/20 to-transparent rounded-full blur-3xl opacity-70" />
+          <div className="absolute top-1/3 -right-20 w-[500px] h-[500px] bg-gradient-to-br from-sky-200/25 via-blue-100/20 to-transparent rounded-full blur-3xl opacity-60" />
+          <div className="absolute -bottom-32 left-1/3 w-[550px] h-[550px] bg-gradient-to-tr from-violet-200/20 via-indigo-100/25 to-transparent rounded-full blur-3xl opacity-60" />
+        </div>
+      )}
+
       {/* DESKTOP SIDEBAR (Visible on md+ screens, fully toggleable) */}
       <AnimatePresence initial={false}>
         {isDesktopSidebarOpen && (
@@ -623,7 +1076,11 @@ export default function App() {
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="hidden md:flex shrink-0 border-r border-slate-800/80 bg-slate-950/80 backdrop-blur-xl flex-col justify-between p-4 z-20 overflow-hidden"
+            className={`hidden md:flex shrink-0 border-r ${
+              !isDarkActive
+                ? 'border-slate-200/70 bg-[#f8fafc]/90'
+                : `${currentTheme.border} ${currentTheme.sidebarBg}`
+            } backdrop-blur-xl flex-col justify-between p-4 z-20 overflow-hidden transition-colors`}
           >
             <div className="w-[288px] h-full flex flex-col justify-between">
               {renderSidebarContent(false)}
@@ -650,7 +1107,7 @@ export default function App() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-              className="md:hidden fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] bg-slate-950/95 border-r border-slate-800 p-4 z-50 shadow-2xl flex flex-col justify-between"
+              className={`md:hidden fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] ${currentTheme.modalBg} border-r ${currentTheme.border} p-4 z-50 shadow-2xl flex flex-col justify-between`}
             >
               {renderSidebarContent(true)}
             </motion.div>
@@ -659,9 +1116,13 @@ export default function App() {
       </AnimatePresence>
 
       {/* MAIN VIEWPORT */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative z-10">
         {/* RESPONSIVE TOP HEADER */}
-        <header className="h-14 shrink-0 border-b border-slate-800/80 bg-slate-950/70 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between z-10">
+        <header className={`h-14 shrink-0 border-b ${
+          !isDarkActive
+            ? 'border-slate-200/70 bg-white/75 shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
+            : `${currentTheme.border} ${currentTheme.headerBg}`
+        } backdrop-blur-md px-3 sm:px-6 flex items-center justify-between z-10 transition-colors`}>
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Sidebar Toggle Button (Desktop & Mobile) */}
             <button
@@ -672,26 +1133,32 @@ export default function App() {
                   setIsDesktopSidebarOpen((prev) => !prev);
                 }
               }}
-              className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-all flex items-center justify-center"
+              className={`p-2 rounded-xl ${
+                !isDarkActive
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs hover:shadow-xs hover:border-slate-300'
+                  : currentTheme.secondaryBtn
+              } transition-all flex items-center justify-center cursor-pointer`}
               title={isDesktopSidebarOpen ? "Collapse sidebar (Ctrl+B)" : "Open sidebar (Ctrl+B)"}
               aria-label="Toggle Sidebar"
             >
               <span className="hidden md:block">
                 {isDesktopSidebarOpen ? (
-                  <PanelLeftClose className="w-4 h-4 text-slate-400" />
+                  <PanelLeftClose className={`w-4 h-4 ${currentTheme.subtext}`} />
                 ) : (
-                  <PanelLeftOpen className="w-4 h-4 text-indigo-400" />
+                  <PanelLeftOpen className="w-4 h-4 text-indigo-500" />
                 )}
               </span>
               <Menu className="w-4 h-4 md:hidden" />
             </button>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center text-white shrink-0 md:hidden">
+            <div className="flex items-center gap-2 sm:gap-2.5">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-500/20">
                 <Bot className="w-4 h-4" />
               </div>
-              <span className="text-xs sm:text-sm font-semibold text-white truncate max-w-[160px] sm:max-w-none">
-                AI Smart Chatbot
+              <span className={`text-xs sm:text-sm font-bold tracking-tight ${
+                !isDarkActive ? 'text-slate-900' : currentTheme.headingText
+              } truncate max-w-[160px] sm:max-w-none`}>
+                NEXORA AI
               </span>
             </div>
           </div>
@@ -701,7 +1168,11 @@ export default function App() {
             {activeTab !== 'chat' && (
               <button
                 onClick={() => setActiveTab('chat')}
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-medium transition-all"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${
+                  isDarkActive
+                    ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-600/30'
+                    : 'bg-indigo-50/90 text-indigo-700 border-indigo-200/70 hover:bg-indigo-100 shadow-2xs'
+                } border text-xs font-medium transition-all cursor-pointer`}
                 title="Return to Chat"
               >
                 <MessageSquare className="w-3.5 h-3.5 shrink-0" />
@@ -709,19 +1180,55 @@ export default function App() {
               </button>
             )}
             <button
+              onClick={() => setActiveTab(activeTab === 'resume' ? 'chat' : 'resume')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'resume'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-xs font-semibold'
+                  : !isDarkActive
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 shadow-2xs hover:border-slate-300'
+                  : currentTheme.secondaryBtn
+              }`}
+              title="AI Resume Analysis & Skill Gap Detection"
+            >
+              <Brain className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="hidden sm:inline">Resume Analysis</span>
+            </button>
+            <button
+              onClick={() => setActiveTab(activeTab === 'project' ? 'chat' : 'project')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all cursor-pointer ${
+                activeTab === 'project'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent shadow-xs font-semibold'
+                  : !isDarkActive
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200/80 shadow-2xs hover:border-slate-300'
+                  : currentTheme.secondaryBtn
+              }`}
+              title="AI Requirement-to-Project Generator"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+              <span className="hidden sm:inline">Idea to Project</span>
+            </button>
+            <button
               onClick={handleNewConversation}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition-all"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${
+                !isDarkActive
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs hover:shadow-xs hover:border-slate-300 hover:text-slate-900'
+                  : currentTheme.secondaryBtn
+              } text-xs font-medium transition-all cursor-pointer`}
               title="New Conversation"
             >
-              <PlusCircle className="w-3.5 h-3.5 shrink-0" />
+              <PlusCircle className="w-3.5 h-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden sm:inline">New</span>
             </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-medium transition-all"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl ${
+                !isDarkActive
+                  ? 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200/80 shadow-2xs hover:shadow-xs hover:border-slate-300 hover:text-slate-900'
+                  : currentTheme.secondaryBtn
+              } text-xs font-medium transition-all cursor-pointer`}
               title="Open Chatbot Settings & Views"
             >
-              <Settings className="w-3.5 h-3.5 shrink-0 text-indigo-400" />
+              <Settings className="w-3.5 h-3.5 shrink-0 text-indigo-600 dark:text-indigo-400" />
               <span className="hidden sm:inline">Settings</span>
             </button>
           </div>
@@ -733,63 +1240,111 @@ export default function App() {
             {/* Messages Scroll Area */}
             <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
               {messages.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="max-w-2xl mx-auto my-6 sm:my-12 text-center space-y-4 sm:space-y-6 px-2"
-                >
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 mx-auto flex items-center justify-center shadow-xl shadow-indigo-500/20 text-white">
-                    <Sparkles className="w-6 h-6 sm:w-8 sm:h-8" />
-                  </div>
-
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                      AI-Powered Smart Chatbot
-                    </h2>
-                    <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
-                      How can I help you today? Ask a question or select an idea below to get started.
-                    </p>
-                  </div>
-
-                  <div className="p-3 sm:p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-left space-y-2.5 sm:space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                      <div className="flex items-center gap-1.5">
-                        <Flame className="w-3.5 h-3.5 text-amber-400" />
-                        <span>Suggested Prompts</span>
-                      </div>
-                      <button
-                        onClick={handleRefreshPrompts}
-                        className="flex items-center gap-1 text-[11px] text-indigo-400 hover:text-indigo-300 px-2 py-0.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 transition-all font-sans font-medium"
-                        title="Shuffle for new random prompts"
+                <div className="min-h-[calc(100vh-13rem)] flex flex-col justify-center items-center py-6 px-2 sm:px-4">
+                  <motion.div
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="max-w-2xl w-full text-center space-y-6 sm:space-y-7"
+                  >
+                    {/* Glowing AI Icon with subtle floating motion */}
+                    <div className="relative mx-auto w-fit">
+                      {!isDarkActive && (
+                        <div className="absolute -inset-3 bg-gradient-to-r from-indigo-500/25 via-purple-500/25 to-sky-400/20 rounded-[32px] blur-xl -z-10 animate-pulse" />
+                      )}
+                      <motion.div
+                        animate={{ y: [0, -6, 0] }}
+                        transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
+                        className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-xl ${
+                          !isDarkActive ? 'shadow-indigo-500/25 ring-4 ring-white/90' : 'shadow-indigo-500/20'
+                        }`}
                       >
-                        <Shuffle className="w-3 h-3" />
-                        <span>Shuffle</span>
-                      </button>
+                        <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 text-white drop-shadow-md" />
+                      </motion.div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {suggestions.map((s, idx) => (
-                        <motion.button
-                          key={s}
-                          initial={{ opacity: 0, y: 6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.96 }}
-                          transition={{ duration: 0.2, delay: idx * 0.05 }}
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => handleSendMessage(s)}
-                          className="p-2.5 sm:p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/40 text-xs text-left text-slate-300 hover:text-white transition-all flex flex-col justify-between group"
-                        >
-                          <span className="font-semibold text-indigo-400 text-[10px] mb-1 group-hover:text-indigo-300">
-                            Idea {idx + 1}
-                          </span>
-                          <span className="line-clamp-2">{s}</span>
-                        </motion.button>
-                      ))}
+                    {/* Headline & Subtitle */}
+                    <div className="space-y-2">
+                      <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
+                        !isDarkActive ? 'text-slate-900' : currentTheme.headingText
+                      }`}>
+                        NEXORA AI
+                      </h2>
+                      <p className={`text-xs sm:text-sm ${
+                        !isDarkActive ? 'text-slate-500' : currentTheme.subtext
+                      } leading-relaxed max-w-md mx-auto`}>
+                        How can I help you today? Ask any question or select an idea below to get started.
+                      </p>
                     </div>
-                  </div>
-                </motion.div>
+
+                    {/* Suggested Prompts Card Component */}
+                    <div className={`rounded-2xl p-4 sm:p-5 text-left space-y-3.5 transition-all ${
+                      !isDarkActive
+                        ? 'bg-white/75 backdrop-blur-xl border border-white/90 shadow-xl shadow-slate-200/50'
+                        : `${currentTheme.subtleBg} border ${currentTheme.border}`
+                    }`}>
+                      <div className="flex items-center justify-between text-[11px] font-semibold tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1 rounded-md ${!isDarkActive ? 'bg-amber-50 text-amber-500' : 'text-amber-500'}`}>
+                            <Flame className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`uppercase font-bold tracking-wider text-[11px] ${
+                            !isDarkActive ? 'text-slate-600' : currentTheme.subtext
+                          }`}>
+                            Suggested Prompts
+                          </span>
+                        </div>
+                        <button
+                          onClick={handleRefreshPrompts}
+                          className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-xl border transition-all font-medium cursor-pointer ${
+                            isDarkActive
+                              ? 'bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border-indigo-500/30'
+                              : 'bg-indigo-50/80 hover:bg-indigo-100/90 text-indigo-700 border-indigo-200/70 shadow-2xs hover:shadow-xs'
+                          }`}
+                          title="Shuffle for new random prompts"
+                        >
+                          <Shuffle className="w-3 h-3 text-indigo-600 dark:text-indigo-400" />
+                          <span>Shuffle</span>
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                        {suggestions.map((s, idx) => (
+                          <motion.button
+                            key={s}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.96 }}
+                            transition={{ duration: 0.22, delay: idx * 0.05 }}
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => handleSendMessage(s)}
+                            className={`p-3 sm:p-3.5 rounded-xl border text-xs text-left transition-all flex flex-col justify-between group cursor-pointer ${
+                              isDarkActive
+                                ? 'bg-[#0d1117] hover:bg-[#161b22] border-[#30363d] hover:border-indigo-500/40 text-slate-300 hover:text-white'
+                                : 'bg-gradient-to-b from-white via-white to-slate-50/60 hover:from-white hover:to-indigo-50/30 border-slate-200/80 hover:border-indigo-300/90 hover:shadow-md hover:shadow-indigo-500/5 text-slate-800 shadow-2xs'
+                            }`}
+                          >
+                            <span className={`font-semibold text-[11px] mb-1.5 ${
+                              isDarkActive
+                                ? 'text-indigo-400 group-hover:text-indigo-300'
+                                : 'text-indigo-600 font-bold'
+                            }`}>
+                              Idea {idx + 1}
+                            </span>
+                            <span className={`text-xs leading-relaxed ${
+                              isDarkActive
+                                ? 'text-slate-300 group-hover:text-white'
+                                : 'text-slate-700 group-hover:text-slate-900'
+                            }`}>
+                              {s}
+                            </span>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
               ) : (
                 <div className="max-w-3xl mx-auto space-y-4 sm:space-y-5">
                   <AnimatePresence initial={false}>
@@ -803,33 +1358,39 @@ export default function App() {
                         className={`flex gap-2 sm:gap-3.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         {m.role === 'assistant' && (
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-md">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-500/20">
                             <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </div>
                         )}
 
                         <div
-                          className={`group relative max-w-[88%] sm:max-w-[82%] rounded-2xl p-3 sm:p-4 text-xs sm:text-sm leading-relaxed shadow-sm transition-all ${
+                          className={`group relative max-w-[88%] sm:max-w-[82%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed shadow-sm transition-all ${
                             m.role === 'user'
-                              ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-tr-sm shadow-indigo-600/10'
+                              ? `${currentTheme.userBubble} rounded-tr-sm`
                               : m.error
-                              ? 'bg-rose-950/40 border border-rose-800/50 text-rose-200 rounded-tl-sm'
-                              : 'bg-slate-900/90 border border-slate-800/90 text-slate-200 rounded-tl-sm backdrop-blur-md'
+                              ? isDarkActive
+                                ? 'bg-rose-950/40 border border-rose-800/50 text-rose-200 rounded-tl-sm'
+                                : 'bg-rose-50 border border-rose-200 text-rose-800 rounded-tl-sm'
+                              : !isDarkActive
+                              ? 'bg-white/95 border border-slate-200/80 text-slate-800 shadow-xs rounded-tl-sm backdrop-blur-md'
+                              : `${currentTheme.botBubble} rounded-tl-sm backdrop-blur-md`
                           }`}
                         >
                           <div className="whitespace-pre-wrap font-sans break-words">{m.content}</div>
 
-                          <div className="flex items-center justify-between gap-3 mt-2 pt-1.5 border-t border-white/10 text-[10px] opacity-75">
+                          <div className={`flex items-center justify-between gap-3 mt-2 pt-1.5 border-t text-[10px] ${
+                            isDarkActive ? 'border-white/10 text-slate-400' : 'border-slate-100 text-slate-500'
+                          }`}>
                             <span className="font-mono">{m.timestamp}</span>
                             <div className="flex items-center gap-1.5">
-                              {m.model && <span className="font-mono text-cyan-300 hidden sm:inline">{m.model}</span>}
+                              {m.model && <span className={`font-mono hidden sm:inline ${isDarkActive ? 'text-cyan-300' : 'text-indigo-600 font-medium'}`}>{m.model}</span>}
                               <button
                                 onClick={() => handleCopy(m.content, m.id)}
-                                className="opacity-80 sm:opacity-0 group-hover:opacity-100 hover:text-white transition-opacity p-0.5"
+                                className={`opacity-80 sm:opacity-0 group-hover:opacity-100 hover:${currentTheme.text} transition-opacity p-0.5 cursor-pointer`}
                                 title="Copy text"
                               >
                                 {copiedId === m.id ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
                                 ) : (
                                   <Copy className="w-3.5 h-3.5" />
                                 )}
@@ -839,7 +1400,9 @@ export default function App() {
                         </div>
 
                         {m.role === 'user' && (
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-800 flex items-center justify-center text-indigo-300 shrink-0 border border-slate-700">
+                          <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                            isDarkActive ? 'bg-slate-800 border-slate-700 text-blue-400' : 'bg-indigo-50 border-indigo-200 text-indigo-600'
+                          }`}>
                             <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </div>
                         )}
@@ -853,11 +1416,11 @@ export default function App() {
                       animate={{ opacity: 1, y: 0 }}
                       className="flex gap-2 sm:gap-3.5 justify-start"
                     >
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white shrink-0 animate-pulse">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-md shadow-indigo-500/20 animate-pulse">
                         <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </div>
-                      <div className="bg-slate-900/90 border border-slate-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-slate-400 text-xs flex items-center gap-2.5">
-                        <RefreshCw className="w-3.5 h-3.5 text-indigo-400 animate-spin" />
+                      <div className={`${isDarkActive ? 'bg-[#161b22] border-[#30363d] text-slate-400' : 'bg-white/95 border-slate-200/80 text-slate-600 shadow-xs'} border rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs flex items-center gap-2.5`}>
+                        <RefreshCw className="w-3.5 h-3.5 text-indigo-500 animate-spin" />
                         <span className="text-[11px] sm:text-xs">Referencing context & generating response...</span>
                       </div>
                     </motion.div>
@@ -868,8 +1431,16 @@ export default function App() {
             </div>
 
             {/* Input Footer */}
-            <div className="p-2.5 sm:p-4 bg-slate-950/90 backdrop-blur-xl border-t border-slate-800/80 shrink-0">
-              <div className="max-w-3xl mx-auto flex items-center gap-1.5 sm:gap-2">
+            <div className={`p-3 sm:p-4 md:p-5 ${
+              !isDarkActive
+                ? 'bg-gradient-to-t from-slate-100/90 via-slate-50/60 to-transparent backdrop-blur-md border-t border-slate-200/40'
+                : `${currentTheme.headerBg} backdrop-blur-xl border-t ${currentTheme.border}`
+            } shrink-0 transition-colors`}>
+              <div className={`max-w-3xl mx-auto flex items-center gap-2 p-1.5 sm:p-2 rounded-2xl transition-all ${
+                !isDarkActive
+                  ? 'bg-white/90 backdrop-blur-xl border border-slate-200/80 shadow-lg shadow-slate-200/60 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-500/15 focus-within:shadow-indigo-500/10'
+                  : `${currentTheme.inputBg} border ${currentTheme.inputBorder} focus-within:border-indigo-500`
+              }`}>
                 <input
                   type="text"
                   value={inputPrompt}
@@ -877,14 +1448,20 @@ export default function App() {
                   onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                   placeholder="Ask a question or continue conversation..."
                   disabled={isLoading}
-                  className="flex-1 bg-slate-900/90 border border-slate-700/80 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none transition-colors"
+                  className={`flex-1 bg-transparent border-0 px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm ${
+                    !isDarkActive ? 'text-slate-800 placeholder-slate-400' : `${currentTheme.text} placeholder-slate-500`
+                  } focus:outline-none`}
                 />
                 <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => handleSendMessage()}
                   disabled={!inputPrompt.trim() || isLoading}
-                  className="px-3.5 py-2.5 sm:px-5 sm:py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-medium text-xs sm:text-sm flex items-center gap-1.5 shadow-lg shadow-indigo-600/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0"
+                  className={`px-4 py-2.5 sm:px-5 sm:py-2.5 rounded-xl ${
+                    !isDarkActive
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md shadow-indigo-500/25 hover:shadow-indigo-500/40'
+                      : currentTheme.accentBtn
+                  } text-xs sm:text-sm font-medium flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed transition-all shrink-0 cursor-pointer`}
                 >
                   <Send className="w-4 h-4" />
                   <span className="hidden sm:inline">Send</span>
@@ -894,16 +1471,42 @@ export default function App() {
           </div>
         )}
 
+        {/* TAB: RESUME ANALYSIS & SKILL GAP DETECTION */}
+        {activeTab === 'resume' && (
+          <ResumeAnalyzer
+            currentTheme={currentTheme}
+            isDarkActive={isDarkActive}
+            selectedModel={selectedModel}
+            onOpenChatWithPrompt={(promptText) => {
+              setActiveTab('chat');
+              handleSendMessage(promptText);
+            }}
+          />
+        )}
+
+        {/* TAB: AI REQUIREMENT-TO-PROJECT GENERATOR */}
+        {activeTab === 'project' && (
+          <ProjectGenerator
+            currentTheme={currentTheme}
+            isDarkActive={isDarkActive}
+            selectedModel={selectedModel}
+            onOpenChatWithPrompt={(promptText) => {
+              setActiveTab('chat');
+              handleSendMessage(promptText);
+            }}
+          />
+        )}
+
         {/* TAB 2: MULTI-TURN TEST SUITE */}
         {activeTab === 'multiturn' && (
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 max-w-4xl mx-auto w-full space-y-4 sm:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b ${currentTheme.border}`}>
               <div>
-                <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-indigo-400" />
+                <h2 className={`text-lg sm:text-xl font-bold ${currentTheme.headingText} flex items-center gap-2`}>
+                  <CheckCircle2 className="w-5 h-5 text-indigo-500" />
                   Multi-Turn Context Test
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className={`text-xs ${currentTheme.subtext} mt-0.5`}>
                   Verifies anaphoric reference resolution ("the second type").
                 </p>
               </div>
@@ -925,8 +1528,12 @@ export default function App() {
                 animate={{ opacity: 1, scale: 1 }}
                 className={`p-3.5 sm:p-4 rounded-xl border flex items-start sm:items-center gap-2.5 sm:gap-3 ${
                   testPassed
-                    ? 'bg-emerald-950/40 border-emerald-600/50 text-emerald-300'
-                    : 'bg-rose-950/40 border-rose-600/50 text-rose-300'
+                    ? isDarkActive
+                      ? 'bg-emerald-950/40 border-emerald-600/50 text-emerald-300'
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : isDarkActive
+                    ? 'bg-rose-950/40 border-rose-600/50 text-rose-300'
+                    : 'bg-rose-50 border-rose-200 text-rose-800'
                 }`}
               >
                 <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 shrink-0 mt-0.5 sm:mt-0" />
@@ -970,25 +1577,25 @@ export default function App() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.08 }}
-                    className="p-3.5 sm:p-5 rounded-xl bg-slate-900/70 border border-slate-800 space-y-2.5 sm:space-y-3"
+                    className={`p-3.5 sm:p-5 rounded-xl ${currentTheme.cardBg} border ${currentTheme.border} ${isDarkActive ? '' : 'shadow-xs'} space-y-2.5 sm:space-y-3`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center text-[11px] font-bold font-mono">
+                        <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/20 text-indigo-500 border border-indigo-500/30 flex items-center justify-center text-[11px] font-bold font-mono">
                           {item.step}
                         </span>
-                        <span className="font-semibold text-xs sm:text-sm text-slate-200">{item.title}</span>
+                        <span className={`font-semibold text-xs sm:text-sm ${currentTheme.headingText}`}>{item.title}</span>
                       </div>
                       {res && (
                         <span
                           className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${
                             res.status === 'success'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              ? isDarkActive ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                               : res.status === 'running'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse'
+                              ? isDarkActive ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse' : 'bg-amber-50 text-amber-700 border border-amber-200 animate-pulse'
                               : res.status === 'failed'
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                              : 'bg-slate-800 text-slate-400'
+                              ? isDarkActive ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : isDarkActive ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-600'
                           }`}
                         >
                           {res.status.toUpperCase()}
@@ -996,13 +1603,13 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="p-2.5 sm:p-3 rounded-lg bg-slate-950/80 border border-slate-800/80 text-xs font-mono text-indigo-300">
+                    <div className={`p-2.5 sm:p-3 rounded-lg ${currentTheme.subtleBg} border ${currentTheme.border} text-xs font-mono text-indigo-600 dark:text-indigo-400`}>
                       User: "{item.prompt}"
                     </div>
 
                     {res?.response && (
-                      <div className="p-2.5 sm:p-3 rounded-lg bg-slate-950/50 border border-slate-800 text-xs text-slate-300 whitespace-pre-wrap max-h-48 overflow-y-auto font-sans leading-relaxed">
-                        <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">
+                      <div className={`p-2.5 sm:p-3 rounded-lg ${currentTheme.subtleBg} border ${currentTheme.border} text-xs ${currentTheme.text} whitespace-pre-wrap max-h-48 overflow-y-auto font-sans leading-relaxed`}>
+                        <span className={`text-[10px] ${currentTheme.subtext} uppercase font-bold block mb-1`}>
                           Assistant Response:
                         </span>
                         {res.response}
@@ -1019,8 +1626,8 @@ export default function App() {
         {activeTab === 'files' && (
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* File List / Mobile Dropdown */}
-            <div className="md:w-64 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-950/80 p-2 sm:p-3 space-y-1 overflow-x-auto md:overflow-y-auto shrink-0 flex md:flex-col gap-1 md:gap-0">
-              <div className="hidden md:block text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2 py-1 mb-2">
+            <div className={`md:w-64 border-b md:border-b-0 md:border-r ${currentTheme.border} ${currentTheme.sidebarBg} p-2 sm:p-3 space-y-1 overflow-x-auto md:overflow-y-auto shrink-0 flex md:flex-col gap-1 md:gap-0`}>
+              <div className={`hidden md:block text-[11px] font-semibold ${currentTheme.subtext} uppercase tracking-wider px-2 py-1 mb-2`}>
                 Project Files
               </div>
               {pythonFiles.map((file, idx) => (
@@ -1029,8 +1636,10 @@ export default function App() {
                   onClick={() => setActiveFileIndex(idx)}
                   className={`whitespace-nowrap px-2.5 py-1.5 md:px-3 md:py-2 rounded-lg text-xs font-mono flex items-center gap-1.5 md:gap-2 transition-all ${
                     activeFileIndex === idx
-                      ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      ? isDarkActive
+                        ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-300 font-semibold shadow-xs'
+                      : `${currentTheme.subtext} hover:${currentTheme.text} ${isDarkActive ? 'hover:bg-slate-800/60' : 'hover:bg-slate-200/60'}`
                   }`}
                 >
                   <FileCode2 className="w-3.5 h-3.5 shrink-0" />
@@ -1038,26 +1647,26 @@ export default function App() {
                 </button>
               ))}
 
-              <div className="md:pt-4 md:border-t md:border-slate-800 md:mt-4 shrink-0">
+              <div className={`md:pt-4 md:border-t ${currentTheme.border} md:mt-4 shrink-0`}>
                 <button
                   onClick={runPyTestOnBackend}
                   disabled={isPyTestRunning}
-                  className="whitespace-nowrap flex items-center justify-center gap-1.5 px-3 py-1.5 md:py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-xs font-medium text-indigo-300 border border-indigo-500/30 transition-all"
+                  className={`whitespace-nowrap flex items-center justify-center gap-1.5 px-3 py-1.5 md:py-2 rounded-lg ${currentTheme.secondaryBtn} text-xs font-medium transition-all`}
                 >
-                  <Terminal className="w-3.5 h-3.5 shrink-0" />
+                  <Terminal className="w-3.5 h-3.5 shrink-0 text-indigo-500" />
                   {isPyTestRunning ? 'Running...' : 'Run python test'}
                 </button>
               </div>
             </div>
 
             {/* Code Viewer */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-slate-950">
-              <div className="h-10 sm:h-11 border-b border-slate-800 px-3 sm:px-4 flex items-center justify-between text-xs font-mono text-slate-400 gap-2 shrink-0 bg-slate-950/80">
+            <div className={`flex-1 flex flex-col overflow-hidden ${currentTheme.appBg}`}>
+              <div className={`h-10 sm:h-11 border-b ${currentTheme.border} px-3 sm:px-4 flex items-center justify-between text-xs font-mono ${currentTheme.subtext} gap-2 shrink-0 ${currentTheme.headerBg}`}>
                 <div className="flex items-center gap-2 truncate">
-                  <span className="truncate font-semibold text-slate-200">
+                  <span className={`truncate font-semibold ${currentTheme.headingText}`}>
                     {pythonFiles[activeFileIndex]?.name || 'Loading...'}
                   </span>
-                  <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">
+                  <span className={`hidden sm:inline px-1.5 py-0.5 rounded text-[10px] ${isDarkActive ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
                     {pythonFiles[activeFileIndex]?.language || 'code'}
                   </span>
                 </div>
@@ -1065,16 +1674,16 @@ export default function App() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={handleDownloadCurrentFile}
-                    className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-sans flex items-center gap-1 transition-colors"
+                    className={`px-2 py-1 rounded ${currentTheme.secondaryBtn} text-[11px] font-sans flex items-center gap-1 transition-colors`}
                     title="Download this file"
                   >
-                    <Download className="w-3 h-3 text-cyan-400" />
+                    <Download className="w-3 h-3 text-cyan-500" />
                     <span className="hidden sm:inline">Download</span>
                   </button>
 
                   <button
                     onClick={handleDownloadZip}
-                    className="px-2 py-1 rounded bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-indigo-200 border border-indigo-500/40 text-[11px] font-sans flex items-center gap-1 transition-colors"
+                    className={`px-2 py-1 rounded ${isDarkActive ? 'bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border-indigo-500/40' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'} border text-[11px] font-sans flex items-center gap-1 transition-colors`}
                     title="Download entire project as ZIP"
                   >
                     <FolderCode className="w-3 h-3" />
@@ -1088,11 +1697,11 @@ export default function App() {
                         pythonFiles[activeFileIndex]?.name || ''
                       )
                     }
-                    className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-[11px] font-sans flex items-center gap-1 transition-colors"
+                    className={`px-2 py-1 rounded ${currentTheme.secondaryBtn} text-[11px] font-sans flex items-center gap-1 transition-colors`}
                     title="Copy code to clipboard"
                   >
                     {copiedId === pythonFiles[activeFileIndex]?.name ? (
-                      <Check className="w-3 h-3 text-emerald-400" />
+                      <Check className="w-3 h-3 text-emerald-500" />
                     ) : (
                       <Copy className="w-3 h-3" />
                     )}
@@ -1101,15 +1710,15 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-auto p-3 sm:p-4">
-                <pre className="text-xs font-mono text-slate-300 leading-relaxed overflow-x-auto">
+              <div className={`flex-1 overflow-auto p-3 sm:p-4 ${isDarkActive ? 'bg-[#0d1117]' : 'bg-[#f6f8fa]'}`}>
+                <pre className={`text-xs font-mono ${isDarkActive ? 'text-slate-300' : 'text-slate-800'} leading-relaxed overflow-x-auto`}>
                   <code>{pythonFiles[activeFileIndex]?.content}</code>
                 </pre>
               </div>
 
               {pyTestOutput && (
-                <div className="h-36 sm:h-44 border-t border-slate-800 bg-slate-950/95 p-3 overflow-auto font-mono text-[11px] text-emerald-400">
-                  <div className="text-[10px] text-slate-500 uppercase font-bold mb-1 flex items-center justify-between">
+                <div className={`h-36 sm:h-44 border-t ${currentTheme.border} ${isDarkActive ? 'bg-slate-950/95 text-emerald-400' : 'bg-slate-900 text-emerald-300'} p-3 overflow-auto font-mono text-[11px]`}>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold mb-1 flex items-center justify-between">
                     <span>Python CLI Output</span>
                     <button
                       onClick={() => setPyTestOutput(null)}
@@ -1129,11 +1738,11 @@ export default function App() {
         {activeTab === 'architecture' && (
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 max-w-4xl mx-auto w-full space-y-6 sm:space-y-8">
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <Network className="w-5 h-5 text-indigo-400" />
-                Smart Chatbot System Architecture
+              <h2 className={`text-lg sm:text-xl font-bold ${currentTheme.headingText} flex items-center gap-2`}>
+                <Network className="w-5 h-5 text-indigo-500" />
+                NEXORA AI System Architecture
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className={`text-xs ${currentTheme.subtext} mt-1`}>
                 Pure LLM API Conversational Architecture — No RAG, No Vector DBs.
               </p>
             </div>
@@ -1195,7 +1804,7 @@ export default function App() {
                   initial={{ opacity: 0, x: -15 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.06 }}
-                  className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-slate-900/80 border border-slate-800"
+                  className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl ${currentTheme.cardBg} border ${currentTheme.border} ${isDarkActive ? '' : 'shadow-xs'}`}
                 >
                   <div
                     className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-tr ${node.color} flex items-center justify-center text-white shrink-0 shadow-md font-bold font-mono text-xs sm:text-sm`}
@@ -1203,8 +1812,8 @@ export default function App() {
                     {node.step}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-xs sm:text-sm text-slate-200 truncate">{node.label}</h3>
-                    <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-relaxed">{node.desc}</p>
+                    <h3 className={`font-semibold text-xs sm:text-sm ${currentTheme.headingText} truncate`}>{node.label}</h3>
+                    <p className={`text-[11px] sm:text-xs ${currentTheme.subtext} mt-0.5 leading-relaxed`}>{node.desc}</p>
                   </div>
                 </motion.div>
               ))}
@@ -1232,258 +1841,712 @@ export default function App() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
-              className="relative w-full max-w-xl bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10"
+              className={`relative w-full max-w-2xl sm:max-w-3xl ${currentTheme.modalBg} border ${currentTheme.border} ${currentTheme.text} rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10`}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-800 bg-slate-900/70 shrink-0">
+              <div className={`flex items-center justify-between px-4 sm:px-6 py-4 border-b ${currentTheme.border} ${isDarkActive ? 'bg-slate-900/70' : 'bg-slate-50'} shrink-0`}>
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-indigo-600/20 text-indigo-400">
+                  <div className={`p-2 rounded-xl ${isDarkActive ? 'bg-indigo-600/20 text-indigo-400' : 'bg-indigo-50 text-indigo-600'}`}>
                     <Settings className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-base font-semibold text-white">
-                      Chatbot Settings & Configuration
+                    <h3 className={`text-sm sm:text-base font-bold ${currentTheme.headingText}`}>
+                      NEXORA AI Settings & Configuration
                     </h3>
-                    <p className="text-[11px] sm:text-xs text-slate-400">
-                      Configure models, personas, system instructions & workspace tools
+                    <p className={`text-[11px] sm:text-xs ${currentTheme.subtext}`}>
+                      Configure Theme mode, LLM models, personas, system instructions & exports
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsSettingsOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  className={`p-1.5 rounded-lg ${currentTheme.subtext} hover:${currentTheme.text} ${isDarkActive ? 'hover:bg-slate-800' : 'hover:bg-slate-200'} transition-colors`}
                   aria-label="Close settings"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
+              {/* Category Navigation Tabs */}
+              <div className={`flex border-b ${currentTheme.border} ${isDarkActive ? 'bg-slate-900/50' : 'bg-slate-100/70'} px-4 sm:px-6 gap-1 shrink-0 overflow-x-auto`}>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('appearance')}
+                  className={`py-3 px-3 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                    settingsTab === 'appearance'
+                      ? `border-blue-600 ${currentTheme.headingText} font-bold`
+                      : `border-transparent ${currentTheme.subtext} hover:${currentTheme.text}`
+                  }`}
+                >
+                  <Palette className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Theme mode</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('model')}
+                  className={`py-3 px-3 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                    settingsTab === 'model'
+                      ? `border-blue-600 ${currentTheme.headingText} font-bold`
+                      : `border-transparent ${currentTheme.subtext} hover:${currentTheme.text}`
+                  }`}
+                >
+                  <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Model & Persona</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('views')}
+                  className={`py-3 px-3 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                    settingsTab === 'views'
+                      ? `border-blue-600 ${currentTheme.headingText} font-bold`
+                      : `border-transparent ${currentTheme.subtext} hover:${currentTheme.text}`
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Workspace Views</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsTab('data')}
+                  className={`py-3 px-3 text-xs font-medium border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                    settingsTab === 'data'
+                      ? `border-blue-600 ${currentTheme.headingText} font-bold`
+                      : `border-transparent ${currentTheme.subtext} hover:${currentTheme.text}`
+                  }`}
+                >
+                  <FolderCode className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Data & Exports</span>
+                </button>
+              </div>
+
               {/* Modal Body (Scrollable) */}
-              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 text-xs text-slate-300">
-                {/* 1. Project Workspace Views */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs font-semibold text-white">
-                    <span className="flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                      Workspace Views & Tools
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-normal">Select active mode</span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      onClick={() => {
-                        setActiveTab('chat');
-                        setIsSettingsOpen(false);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                        activeTab === 'chat'
-                          ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/50'
-                          : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <MessageSquare className={`w-4 h-4 mb-2 ${activeTab === 'chat' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                      <div>
-                        <div className="font-semibold text-xs text-white">Chat</div>
-                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">Interactive bot</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTab('multiturn');
-                        setIsSettingsOpen(false);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                        activeTab === 'multiturn'
-                          ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/50'
-                          : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <CheckCircle2 className={`w-4 h-4 mb-2 ${activeTab === 'multiturn' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                      <div>
-                        <div className="font-semibold text-xs text-white">Test Suite</div>
-                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">3-turn validator</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTab('files');
-                        setIsSettingsOpen(false);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                        activeTab === 'files'
-                          ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/50'
-                          : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <FolderCode className={`w-4 h-4 mb-2 ${activeTab === 'files' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                      <div>
-                        <div className="font-semibold text-xs text-white">Codebase</div>
-                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">Python files</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setActiveTab('architecture');
-                        setIsSettingsOpen(false);
-                      }}
-                      className={`p-2.5 rounded-xl border text-left flex flex-col justify-between transition-all ${
-                        activeTab === 'architecture'
-                          ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-md shadow-indigo-600/20 ring-1 ring-indigo-500/50'
-                          : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <Network className={`w-4 h-4 mb-2 ${activeTab === 'architecture' ? 'text-indigo-400' : 'text-slate-400'}`} />
-                      <div>
-                        <div className="font-semibold text-xs text-white">Architecture</div>
-                        <div className="text-[10px] text-slate-400 leading-tight mt-0.5">System flow</div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 2. Model Selection */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <Cpu className="w-3.5 h-3.5 text-indigo-400" />
-                    LLM Model Architecture
-                  </label>
-                  <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full text-xs bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Recommended - Fastest & Low Latency)</option>
-                    <option value="gemini-3.8-flash">gemini-3.8-flash (Standard Multimodal Intelligence)</option>
-                    <option value="gemini-flash-latest">gemini-flash-latest (General Fast Inference)</option>
-                    <option value="gemini-3.1-flash-lite-preview">gemini-3.1-flash-lite-preview (Next-Gen Preview)</option>
-                  </select>
-                </div>
-
-                {/* 3. System Persona & Live Prompt Display */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <Bot className="w-3.5 h-3.5 text-indigo-400" />
-                    Chatbot Persona & System Prompt
-                  </label>
-                  <select
-                    value={selectedPersona}
-                    onChange={(e) => setSelectedPersona(e.target.value)}
-                    className="w-full text-xs bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-slate-200 focus:outline-none focus:border-indigo-500"
-                  >
-                    {Object.keys(PERSONAS).map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800/80 text-[11px] text-slate-400 italic">
-                    "{PERSONAS[selectedPersona]}"
-                  </div>
-                </div>
-
-                {/* 4. Sliders: Temperature & Context Turns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-semibold text-white">Creativity (Temperature)</span>
-                      <span className="text-indigo-400 font-mono font-bold">{temperature}</span>
+              <div className={`p-4 sm:p-6 overflow-y-auto space-y-5 text-xs ${currentTheme.text}`}>
+                {/* TAB 1: THEME MODE (GitHub Theme Settings UI) */}
+                {settingsTab === 'appearance' && (
+                  <div className="space-y-5">
+                    {/* Header Description */}
+                    <div>
+                      <h4 className={`text-sm font-bold ${currentTheme.headingText}`}>Theme mode</h4>
+                      <p className={`text-xs ${currentTheme.subtext} mt-1 leading-relaxed`}>
+                        Choose how the application looks to you. Select a single theme, or sync with your system and automatically switch between day and night themes.
+                      </p>
                     </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={temperature}
-                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                      className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>0.0 (Precise / Code)</span>
-                      <span>1.0 (Creative)</span>
+
+                    {/* Mode Selector Dropdown */}
+                    <div className="space-y-1.5 max-w-sm">
+                      <label className={`text-xs font-semibold ${currentTheme.headingText} flex items-center gap-1.5`}>
+                        <Monitor className="w-3.5 h-3.5 text-indigo-500" />
+                        Theme mode
+                      </label>
+                      <select
+                        value={themeModeSetting}
+                        onChange={(e) => handleThemeModeChange(e.target.value as ThemeModeSetting)}
+                        className={`w-full text-xs ${isDarkActive ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'} border rounded-xl px-3 py-2.5 focus:outline-none focus:border-blue-500 cursor-pointer`}
+                      >
+                        <option value="sync">Sync with system</option>
+                        <option value="single">Single theme</option>
+                      </select>
+                    </div>
+
+                    {/* Single Theme Toggle If Single Mode Selected */}
+                    {themeModeSetting === 'single' && (
+                      <div className={`p-3 rounded-xl ${isDarkActive ? 'bg-slate-900/70 border-slate-800' : 'bg-slate-50 border-slate-200'} border flex items-center justify-between`}>
+                        <div>
+                          <div className={`font-semibold ${currentTheme.headingText} text-xs`}>Active Theme Preference</div>
+                          <div className={`text-[11px] ${currentTheme.subtext}`}>Click on Day theme or Night theme below to activate it.</div>
+                        </div>
+                        <div className={`inline-flex rounded-lg ${isDarkActive ? 'bg-slate-950 border-slate-800' : 'bg-slate-200/80 border-slate-300'} p-1 border gap-1`}>
+                          <button
+                            type="button"
+                            onClick={() => handleSingleThemeTarget('light')}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+                              singleThemeTarget === 'light'
+                                ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                                : `${currentTheme.subtext} hover:${currentTheme.text}`
+                            }`}
+                          >
+                            <Sun className="w-3.5 h-3.5" />
+                            Day
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSingleThemeTarget('dark')}
+                            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5 ${
+                              singleThemeTarget === 'dark'
+                                ? 'bg-blue-600 text-white shadow-sm font-semibold'
+                                : `${currentTheme.subtext} hover:${currentTheme.text}`
+                            }`}
+                          >
+                            <Moon className="w-3.5 h-3.5" />
+                            Night
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Theme Cards Grid (Day theme & Night theme) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* CARD 1: DAY THEME */}
+                      <div
+                        onClick={() => handleActivateTheme('light')}
+                        className={`rounded-2xl border p-4 transition-all flex flex-col justify-between cursor-pointer ${
+                          !isDarkActive
+                            ? 'bg-white border-blue-600 ring-2 ring-blue-500/30 shadow-md'
+                            : isDarkActive
+                            ? 'bg-slate-900/40 border-slate-800/90 hover:border-slate-700'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Sun className="w-4 h-4 text-amber-500" />
+                              <span className={`font-semibold text-sm ${currentTheme.headingText}`}>Day theme</span>
+                            </div>
+                            {!isDarkActive ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                Active
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActivateTheme('light');
+                                }}
+                                className="text-[10px] px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-600 dark:text-blue-300 hover:bg-blue-600/40 border border-blue-500/30 font-medium transition-colors cursor-pointer"
+                              >
+                                Select
+                              </button>
+                            )}
+                          </div>
+
+                          <p className={`text-[11px] ${currentTheme.subtext} leading-snug`}>
+                            Choose the theme you'd like to use during the day.
+                          </p>
+
+                          {/* Theme Variant Select */}
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={selectedLightTheme}
+                              onChange={(e) => {
+                                handleLightThemeSelect(e.target.value);
+                                if (!isDarkActive) {
+                                  // Keep current variant
+                                }
+                              }}
+                              className={`w-full text-xs ${isDarkActive ? 'bg-slate-950 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'} border rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer`}
+                            >
+                              <option value="light-default">Light default</option>
+                              <option value="light-high-contrast">Light high contrast</option>
+                              <option value="light-colorblind">Light Protanopia & Deuteranopia</option>
+                              <option value="light-tritanopia">Light Tritanopia</option>
+                            </select>
+                          </div>
+
+                          {/* Graphic Illustration Preview of Day Theme */}
+                          <div
+                            className="group relative rounded-xl border border-slate-300 bg-[#ffffff] p-3 shadow-sm space-y-2.5 transition-all select-none overflow-hidden"
+                          >
+                            {/* Mini Topbar */}
+                            <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded bg-slate-900 flex items-center justify-center text-[9px] text-white font-bold">
+                                  ⌘
+                                </div>
+                                <div className="h-3 w-16 bg-slate-100 border border-slate-300 rounded-full px-1 flex items-center">
+                                  <div className="h-1 w-8 bg-slate-300 rounded" />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-slate-200" />
+                                <div className="w-3 h-3 rounded-full bg-slate-300" />
+                              </div>
+                            </div>
+
+                            {/* Mini Workspace Content */}
+                            <div className="flex gap-2">
+                              {/* Left Mini Sidebar */}
+                              <div className="w-16 space-y-1 py-0.5">
+                                <div className="h-2 w-12 bg-blue-100 rounded text-[7px] text-blue-600 font-semibold px-1 flex items-center">
+                                  Chat
+                                </div>
+                                <div className="h-1.5 w-10 bg-slate-100 rounded" />
+                                <div className="h-1.5 w-14 bg-slate-100 rounded" />
+                              </div>
+
+                              {/* Main Mini Chat View */}
+                              <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg p-2 space-y-1.5">
+                                <div className="flex justify-end">
+                                  <div className="h-3 w-20 bg-blue-600 rounded text-[7px] text-white px-1 flex items-center font-medium">
+                                    Hello AI
+                                  </div>
+                                </div>
+                                <div className="flex justify-start">
+                                  <div className="h-3.5 w-28 bg-white border border-slate-200 rounded text-[7px] text-slate-700 px-1 flex items-center">
+                                    Ready to assist you
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Color Palette Swatches */}
+                            <div className="flex items-center justify-between pt-1 border-t border-slate-100">
+                              <span className="text-[9px] font-mono text-slate-500">Light palette</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#1f883d]" title="Green" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#0969da]" title="Blue" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#8250df]" title="Purple" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#bc4c00]" title="Orange" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#cf222e]" title="Red" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* CARD 2: NIGHT THEME */}
+                      <div
+                        onClick={() => handleActivateTheme('dark')}
+                        className={`rounded-2xl border p-4 transition-all flex flex-col justify-between cursor-pointer ${
+                          isDarkActive
+                            ? 'bg-slate-900/90 border-blue-500/80 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/10'
+                            : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
+                        }`}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Moon className="w-4 h-4 text-blue-400" />
+                              <span className={`font-semibold text-sm ${currentTheme.headingText}`}>Night theme</span>
+                            </div>
+                            {isDarkActive ? (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                Active
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleActivateTheme('dark');
+                                }}
+                                className="text-[10px] px-2.5 py-1 rounded-lg bg-blue-600/20 text-blue-600 dark:text-blue-300 hover:bg-blue-600/40 border border-blue-500/30 font-medium transition-colors cursor-pointer"
+                              >
+                                Select
+                              </button>
+                            )}
+                          </div>
+
+                          <p className={`text-[11px] ${currentTheme.subtext} leading-snug`}>
+                            Choose the theme you'd like to use during the night.
+                          </p>
+
+                          {/* Theme Variant Select */}
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <select
+                              value={selectedDarkTheme}
+                              onChange={(e) => {
+                                handleDarkThemeSelect(e.target.value);
+                              }}
+                              className={`w-full text-xs ${isDarkActive ? 'bg-slate-950 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'} border rounded-xl px-3 py-2 focus:outline-none focus:border-blue-500 cursor-pointer`}
+                            >
+                              <option value="dark-default">Dark default</option>
+                              <option value="dark-dimmed">Dark dimmed</option>
+                              <option value="dark-high-contrast">Dark high contrast</option>
+                              <option value="dark-colorblind">Dark Protanopia & Deuteranopia</option>
+                              <option value="dark-tritanopia">Dark Tritanopia</option>
+                            </select>
+                          </div>
+
+                          {/* Graphic Illustration Preview of Night Theme */}
+                          <div
+                            className="group relative rounded-xl border border-[#30363d] bg-[#0d1117] p-3 shadow-md space-y-2.5 transition-all select-none overflow-hidden"
+                          >
+                            {/* Mini Topbar */}
+                            <div className="flex items-center justify-between pb-2 border-b border-[#30363d]">
+                              <div className="flex items-center gap-2">
+                                <div className="w-4 h-4 rounded bg-[#1f6feb] flex items-center justify-center text-[9px] text-white font-bold">
+                                  ⌘
+                                </div>
+                                <div className="h-3 w-16 bg-[#161b22] border border-[#30363d] rounded-full px-1 flex items-center">
+                                  <div className="h-1 w-8 bg-[#30363d] rounded" />
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-[#21262d]" />
+                                <div className="w-3 h-3 rounded-full bg-[#30363d]" />
+                              </div>
+                            </div>
+
+                            {/* Mini Workspace Content */}
+                            <div className="flex gap-2">
+                              {/* Left Mini Sidebar */}
+                              <div className="w-16 space-y-1 py-0.5">
+                                <div className="h-2 w-12 bg-[#388bfd]/20 border border-[#388bfd]/30 rounded text-[7px] text-[#58a6ff] font-semibold px-1 flex items-center">
+                                  Chat
+                                </div>
+                                <div className="h-1.5 w-10 bg-[#21262d] rounded" />
+                                <div className="h-1.5 w-14 bg-[#21262d] rounded" />
+                              </div>
+
+                              {/* Main Mini Chat View */}
+                              <div className="flex-1 bg-[#161b22] border border-[#30363d] rounded-lg p-2 space-y-1.5">
+                                <div className="flex justify-end">
+                                  <div className="h-3 w-20 bg-[#1f6feb] rounded text-[7px] text-white px-1 flex items-center font-medium">
+                                    Hello AI
+                                  </div>
+                                </div>
+                                <div className="flex justify-start">
+                                  <div className="h-3.5 w-28 bg-[#21262d] border border-[#30363d] rounded text-[7px] text-[#c9d1d9] px-1 flex items-center">
+                                    Ready to assist you
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Color Palette Swatches */}
+                            <div className="flex items-center justify-between pt-1 border-t border-[#30363d]">
+                              <span className="text-[9px] font-mono text-slate-400">Dark palette</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#238636]" title="Green" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#1f6feb]" title="Blue" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#a371f7]" title="Purple" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#db6d28]" title="Orange" />
+                                <span className="w-2.5 h-2.5 rounded-full bg-[#f85149]" title="Red" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contrast & Accessibility Preferences */}
+                    <div className={`p-3.5 rounded-xl ${isDarkActive ? 'bg-slate-900/50 border-slate-800' : 'bg-slate-50 border-slate-200'} border space-y-2.5`}>
+                      <div className={`font-semibold ${currentTheme.headingText} text-xs`}>Accessibility & High Contrast</div>
+                      <label className="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={increaseContrast}
+                          onChange={(e) => handleContrastToggle(e.target.checked)}
+                          className="mt-0.5 rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-0 cursor-pointer"
+                        />
+                        <div>
+                          <div className={`text-xs font-medium ${currentTheme.headingText}`}>
+                            Increase contrast of UI elements (Experimental)
+                          </div>
+                          <div className={`text-[11px] ${currentTheme.subtext} leading-relaxed mt-0.5`}>
+                            Maximizes border clarity, text luminance, and contrast distinctions across both day and night themes.
+                          </div>
+                        </div>
+                      </label>
+                      <div className={`pt-2 border-t ${currentTheme.border} flex flex-wrap items-center justify-between text-[11px] ${currentTheme.subtext} gap-2`}>
+                        <span>
+                          System preference detected:{' '}
+                          <span className={`${currentTheme.headingText} font-medium`}>
+                            {systemPrefersDark ? 'Dark mode' : 'Light mode'}
+                          </span>
+                        </span>
+                        <span>
+                          Current active theme:{' '}
+                          <span className="text-indigo-500 font-mono font-medium">
+                            {currentTheme.name}
+                          </span>
+                        </span>
+                      </div>
                     </div>
                   </div>
+                )}
 
-                  <div className="p-3 sm:p-3.5 rounded-xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="font-semibold text-white">Context Memory Window</span>
-                      <span className="text-indigo-400 font-mono font-bold">{contextTurns} turns</span>
+                {/* TAB 2: MODEL & PERSONA */}
+                {settingsTab === 'model' && (
+                  <div className="space-y-4">
+                    {/* Model Architecture */}
+                    <div className="space-y-1.5">
+                      <label className={`text-xs font-semibold ${currentTheme.headingText} flex items-center gap-1.5`}>
+                        <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+                        LLM Model Architecture
+                      </label>
+                      <select
+                        value={selectedModel}
+                        onChange={(e) => setSelectedModel(e.target.value)}
+                        className={`w-full text-xs ${isDarkActive ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'} border rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500`}
+                      >
+                        <option value="gemini-flash-lite-latest">gemini-flash-lite-latest (Recommended - Fastest & Low Latency)</option>
+                        <option value="gemini-3.8-flash">gemini-3.8-flash (Standard Multimodal Intelligence)</option>
+                        <option value="gemini-flash-latest">gemini-flash-latest (General Fast Inference)</option>
+                        <option value="gemini-3.1-flash-lite-preview">gemini-3.1-flash-lite-preview (Next-Gen Preview)</option>
+                      </select>
                     </div>
-                    <input
-                      type="range"
-                      min="2"
-                      max="20"
-                      step="1"
-                      value={contextTurns}
-                      onChange={(e) => setContextTurns(parseInt(e.target.value, 10))}
-                      className="w-full accent-indigo-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>2 turns</span>
-                      <span>20 turns</span>
+
+                    {/* Persona & System Prompt */}
+                    <div className="space-y-1.5">
+                      <label className={`text-xs font-semibold ${currentTheme.headingText} flex items-center gap-1.5`}>
+                        <Bot className="w-3.5 h-3.5 text-indigo-500" />
+                        Chatbot Persona & System Prompt
+                      </label>
+                      <select
+                        value={selectedPersona}
+                        onChange={(e) => setSelectedPersona(e.target.value)}
+                        className={`w-full text-xs ${isDarkActive ? 'bg-slate-900 border-slate-700/80 text-slate-200' : 'bg-white border-slate-300 text-slate-800 shadow-xs'} border rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500`}
+                      >
+                        {Object.keys(PERSONAS).map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <div className={`p-2.5 rounded-lg ${isDarkActive ? 'bg-slate-900/60 border-slate-800/80' : 'bg-slate-50 border-slate-200'} border text-[11px] ${currentTheme.subtext} italic`}>
+                        "{PERSONAS[selectedPersona]}"
+                      </div>
+                    </div>
+
+                    {/* Sliders: Temperature & Context Turns */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <div className={`p-3 sm:p-3.5 rounded-xl ${isDarkActive ? 'bg-slate-900/60 border-slate-800/80' : 'bg-slate-50 border-slate-200'} border space-y-2`}>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className={`font-semibold ${currentTheme.headingText}`}>Creativity (Temperature)</span>
+                          <span className="text-indigo-500 font-mono font-bold">{temperature}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={temperature}
+                          onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                          className="w-full accent-indigo-500 h-1.5 bg-slate-300 dark:bg-slate-800 rounded-lg cursor-pointer"
+                        />
+                        <div className={`flex justify-between text-[10px] ${currentTheme.subtext}`}>
+                          <span>0.0 (Precise / Code)</span>
+                          <span>1.0 (Creative)</span>
+                        </div>
+                      </div>
+
+                      <div className={`p-3 sm:p-3.5 rounded-xl ${isDarkActive ? 'bg-slate-900/60 border-slate-800/80' : 'bg-slate-50 border-slate-200'} border space-y-2`}>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className={`font-semibold ${currentTheme.headingText}`}>Context Memory Window</span>
+                          <span className="text-indigo-500 font-mono font-bold">{contextTurns} turns</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="2"
+                          max="20"
+                          step="1"
+                          value={contextTurns}
+                          onChange={(e) => setContextTurns(parseInt(e.target.value, 10))}
+                          className="w-full accent-indigo-500 h-1.5 bg-slate-300 dark:bg-slate-800 rounded-lg cursor-pointer"
+                        />
+                        <div className={`flex justify-between text-[10px] ${currentTheme.subtext}`}>
+                          <span>2 turns</span>
+                          <span>20 turns</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Custom Directives */}
+                    <div className="space-y-1.5">
+                      <label className={`text-xs font-semibold ${currentTheme.headingText} block`}>
+                        Custom Prompt Directives (Appended to System Prompt)
+                      </label>
+                      <textarea
+                        value={customInstructions}
+                        onChange={(e) => setCustomInstructions(e.target.value)}
+                        placeholder="e.g. Always conclude with 1 actionable recommendation or code snippet..."
+                        rows={2}
+                        className={`w-full text-xs ${isDarkActive ? 'bg-slate-900 border-slate-700/80 text-slate-200 placeholder-slate-500' : 'bg-white border-slate-300 text-slate-800 placeholder-slate-400 shadow-xs'} border rounded-xl p-2.5 focus:outline-none focus:border-indigo-500 resize-none`}
+                      />
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* 5. Custom Directives */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-white block">
-                    Custom Prompt Directives (Appended to System Prompt)
-                  </label>
-                  <textarea
-                    value={customInstructions}
-                    onChange={(e) => setCustomInstructions(e.target.value)}
-                    placeholder="e.g. Always conclude with 1 actionable recommendation or code snippet..."
-                    rows={2}
-                    className="w-full text-xs bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none"
-                  />
-                </div>
+                {/* TAB 3: WORKSPACE VIEWS */}
+                {settingsTab === 'views' && (
+                  <div className="space-y-3">
+                    <div className={`text-xs font-semibold ${currentTheme.headingText}`}>Select Active Workspace View</div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('chat');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'chat'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <MessageSquare className={`w-4 h-4 mb-2 ${activeTab === 'chat' ? 'text-blue-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Chat</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>Interactive bot</div>
+                        </div>
+                      </button>
 
-                {/* 6. Chat History & Data Controls + Project ZIP */}
-                <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/80 space-y-2.5">
-                  <div className="text-xs font-semibold text-white flex items-center justify-between">
-                    <span>Chat Data & Project Exports</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{savedSessions.length} Saved Chats</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('resume');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'resume'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <Brain className={`w-4 h-4 mb-2 ${activeTab === 'resume' ? 'text-indigo-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Resume AI</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>Skill gap detector</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('project');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'project'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <Lightbulb className={`w-4 h-4 mb-2 ${activeTab === 'project' ? 'text-amber-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Project Spec</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>Idea to Project</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('multiturn');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'multiturn'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <CheckCircle2 className={`w-4 h-4 mb-2 ${activeTab === 'multiturn' ? 'text-blue-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Test Suite</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>3-turn validator</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('files');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'files'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <FolderCode className={`w-4 h-4 mb-2 ${activeTab === 'files' ? 'text-blue-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Codebase</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>Python files</div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('architecture');
+                          setIsSettingsOpen(false);
+                        }}
+                        className={`p-3 rounded-xl border text-left flex flex-col justify-between transition-all cursor-pointer ${
+                          activeTab === 'architecture'
+                            ? 'bg-blue-600/15 border-blue-500 ring-1 ring-blue-500/50 shadow-xs'
+                            : isDarkActive
+                            ? 'bg-slate-900/60 hover:bg-slate-900 border-slate-800 text-slate-300'
+                            : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-800 shadow-xs'
+                        }`}
+                      >
+                        <Network className={`w-4 h-4 mb-2 ${activeTab === 'architecture' ? 'text-blue-500' : currentTheme.subtext}`} />
+                        <div>
+                          <div className={`font-semibold text-xs ${currentTheme.headingText}`}>Architecture</div>
+                          <div className={`text-[10px] ${currentTheme.subtext} leading-tight mt-0.5`}>System flow</div>
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={handleDownloadZip}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-indigo-200 border border-indigo-500/40 text-xs font-medium transition-all shadow-sm"
-                      title="Download full python chatbot codebase as ZIP"
-                    >
-                      <FolderCode className="w-3.5 h-3.5" />
-                      Download Project (ZIP)
-                    </button>
-                    <button
-                      onClick={handleExportJson}
-                      disabled={messages.length === 0}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 text-xs font-medium transition-all disabled:opacity-40"
-                    >
-                      <Download className="w-3.5 h-3.5 text-indigo-400" />
-                      Export Current Chat (JSON)
-                    </button>
-                    <button
-                      onClick={handleClearAllSessions}
-                      disabled={savedSessions.length === 0}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 border border-rose-800/60 text-xs font-medium transition-all disabled:opacity-40"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      Clear All Saved Chats
-                    </button>
+                )}
+
+                {/* TAB 4: DATA & EXPORTS */}
+                {settingsTab === 'data' && (
+                  <div className="space-y-3">
+                    <div className={`p-3.5 rounded-xl ${isDarkActive ? 'bg-slate-900/60 border-slate-800' : 'bg-slate-50 border-slate-200'} border space-y-3`}>
+                      <div className="text-xs font-semibold flex items-center justify-between">
+                        <span className={currentTheme.headingText}>Chat Data & Project Exports</span>
+                        <span className={`text-[10px] ${currentTheme.subtext} font-mono`}>{savedSessions.length} Saved Chats</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2.5">
+                        <button
+                          type="button"
+                          onClick={handleDownloadZip}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${isDarkActive ? 'bg-indigo-600/20 text-indigo-300 border-indigo-500/40 hover:bg-indigo-600/30' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100'} border text-xs font-medium transition-all shadow-xs`}
+                          title="Download full python chatbot codebase as ZIP"
+                        >
+                          <FolderCode className="w-3.5 h-3.5" />
+                          Download Project (ZIP)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleExportJson}
+                          disabled={messages.length === 0}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-lg ${currentTheme.secondaryBtn} text-xs font-medium transition-all disabled:opacity-40`}
+                        >
+                          <Download className="w-3.5 h-3.5 text-indigo-500" />
+                          Export Current Chat (JSON)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleClearAllSessions}
+                          disabled={savedSessions.length === 0}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 border border-rose-500/30 text-xs font-medium transition-all disabled:opacity-40"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Clear All Saved Chats
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Modal Footer */}
-              <div className="px-4 sm:px-6 py-3 border-t border-slate-800 bg-slate-900/70 flex items-center justify-between shrink-0">
-                <span className="text-[11px] text-slate-500">
+              <div className={`px-4 sm:px-6 py-3 border-t ${currentTheme.border} ${isDarkActive ? 'bg-slate-900/70' : 'bg-slate-50'} flex items-center justify-between shrink-0`}>
+                <span className={`text-[11px] ${currentTheme.subtext}`}>
                   Settings are auto-saved to your local session.
                 </span>
                 <button
+                  type="button"
                   onClick={() => setIsSettingsOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-md shadow-indigo-600/20"
+                  className={`px-4 py-2 rounded-xl ${currentTheme.accentBtn} text-xs font-medium transition-colors shadow-xs`}
                 >
                   Done
                 </button>
