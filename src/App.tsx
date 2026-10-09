@@ -1382,20 +1382,17 @@ export default function App() {
                             isDarkActive ? 'border-white/10 text-slate-400' : 'border-slate-100 text-slate-500'
                           }`}>
                             <span className="font-mono">{m.timestamp}</span>
-                            <div className="flex items-center gap-1.5">
-                              {m.model && <span className={`font-mono hidden sm:inline ${isDarkActive ? 'text-cyan-300' : 'text-indigo-600 font-medium'}`}>{m.model}</span>}
-                              <button
-                                onClick={() => handleCopy(m.content, m.id)}
-                                className={`opacity-80 sm:opacity-0 group-hover:opacity-100 hover:${currentTheme.text} transition-opacity p-0.5 cursor-pointer`}
-                                title="Copy text"
-                              >
-                                {copiedId === m.id ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-                            </div>
+                            <button
+                              onClick={() => handleCopy(m.content, m.id)}
+                              className={`opacity-80 sm:opacity-0 group-hover:opacity-100 hover:${currentTheme.text} transition-opacity p-0.5 cursor-pointer`}
+                              title="Copy text"
+                            >
+                              {copiedId === m.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-500" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
                           </div>
                         </div>
 
